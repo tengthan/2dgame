@@ -1,104 +1,80 @@
 package gremlins;
 
+import static java.lang.System.out;
+
+import java.util.Vector;
+
 import processing.core.PImage;
 
-public class Wizard{
-    private int x;
-    private int y;
-
-    private int xVel = 0;
-    private int yVel = 0;
-    private int up;
-    private int down;
+public class Wizard {
     private int speed = 2;
-
+    private int map_width, map_height;
+    private Vector2 location = new Vector2(20, 20);
+    public Vector2 direction = Vector2.ZERO;
+    final int image_size = 20;
+    private int checkMargin = 19;
     boolean checkColision = false;
 
-    public String movement = "up";
-    
     public static final int HEIGHT = 20;
     public int width = 20;
+    private String[][] mapPrint = new String[][] {};
 
-    public Wizard(int x,int y, String mapPrint[][]) {
-        this.x = x;
-        this.y = y;
-        collision(mapPrint);
+    public Wizard(int x, int y, String mapPrint[][]) {
+        this.mapPrint = mapPrint;
+        this.map_height = mapPrint.length;
+        this.map_width = mapPrint[0].length;
     }
 
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-    // public void pressed(){
-    //     if (this.checkColision == false){
-    //         switch(this.movement){
-    //             case "up":
-    //                 this.yVel = -speed;
-    //             case "down":
-    //                 this.yVel = speed; 
-    //             case "right":
-    //                 this.xVel = speed;
-    //             case "left":
-    //                 this.xVel = -speed;
-    //         }
-
-    //     }
-    // }
     public void left() {
-        this.movement = "left";
-        this.xVel = -speed;
+        this.direction = Vector2.LEFT;
     }
 
     public void right() {
-        this.movement = "right";
-        this.xVel = speed;
+        this.direction = Vector2.RIGHT;
     }
 
-    public void up(){
-        this.movement = "up";
-        this.yVel = -speed;
+    public void up() {
+        this.direction = Vector2.UP;
     }
 
-    public void down(){
-        this.movement = "down";
-        this.yVel = speed; 
+    public void down() {
+        this.direction = Vector2.DOWN;
     }
 
-    public void stop() {
-        this.xVel = 0;
-        this.yVel = 0;
-    }
-
-    public void collision(String mapPrint[][]){
-        switch(this.movement){
-            case "up":
-            this.up = (this.y- 20)/20;
-            if (mapPrint[this.x/20][this.up] == "X" || mapPrint[this.x/20][this.up] == "B"){
-                this.checkColision= true;
-                this.stop();
+    public boolean canPass(Vector2[] checkPoints) {
+        for (Vector2 v : checkPoints) {
+            Vector2 new_loc = v.getAdded(this.direction);
+            int x = (int) (new_loc.x / 20);
+            int y = (int) (new_loc.y / 20);
+            if ((mapPrint[y][x] == "X" || mapPrint[y][x] == "B")) {
+                return false;
             }
-            break;
-            case "down":
-            this.down = (this.y- speed +20)/20;
-            if (mapPrint[this.x/20][this.down] == "X" || mapPrint[this.x/20][this.down] == "B"){
-                this.checkColision=true;
-                this.stop();
-            }
-            break;
+            
         }
+        return true;
     }
 
-    public void draw(App app , PImage image) {
-        app.image(image,this.x,this.y,width, HEIGHT);
-        System.out.println("dz");
-        x += xVel;
-        y += yVel;
-        System.out.println(x);
-        System.out.println(y);
+    public void draw(App app, PImage image) {
+        Vector2[] checkPoints = new Vector2[2];
+        if (direction == Vector2.RIGHT) {
+            checkPoints[0] = location.getAdded(direction.getMultiplied(checkMargin));
+            checkPoints[1] = checkPoints[0].getAdded(Vector2.DOWN.getMultiplied(checkMargin));
+        } else if (direction == Vector2.LEFT) {
+            checkPoints[0] = location;
+            checkPoints[1] = checkPoints[0].getAdded(Vector2.DOWN.getMultiplied(checkMargin));
+        } else if (direction == Vector2.UP) {
+            checkPoints[0] = location;
+            checkPoints[1] = checkPoints[0].getAdded(Vector2.RIGHT.getMultiplied(checkMargin));
+        } else if (direction == Vector2.DOWN) {
+            checkPoints[0] = location.getAdded(direction.getMultiplied(checkMargin));
+            checkPoints[1] = checkPoints[0].getAdded(Vector2.RIGHT.getMultiplied(checkMargin));
+        }
+        if (checkPoints[0] != null && checkPoints[1] != null)
+            if (canPass(checkPoints)) {
+                location = location.getAdded(direction.getMultiplied(speed));
+            }
+
+        app.image(image, (int) location.x, (int) location.y, width, HEIGHT);
     }
 
 }
